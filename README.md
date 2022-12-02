@@ -1,6 +1,6 @@
 # ESO-Addon-Downloader
 ## Automate your Elder Scrolls Online AddOn installations
-
+[![Support Server](https://img.shields.io/discord/409050120894545920?color=%23ef5600&label=DISCORD&style=for-the-badge)](https://discord.gg/YP4eNUF)
 
 This PowerShell script is designed to parse ESOUI.com for your favorite AddOns and either list their details or download the latest version. For this, **ESO-Addon-Downloader** is using their unique AddOn ID to retreive the download page and parse the HTML for the required information.
 
