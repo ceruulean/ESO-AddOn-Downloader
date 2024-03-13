@@ -13,9 +13,13 @@ This PowerShell script is designed to parse ESOUI.com for your favorite AddOns a
 
 ## Screenshots
 #### Main Menu
-![](https://i.imgur.com/TKoebGf.png)
+![image](https://github.com/ceruulean/ESO-AddOn-Downloader/assets/41603229/6aceb91e-7437-4bb1-a3fe-d37c9964cd5f)
+
 #### Parsing ESOUI for AddOn details
 ![](https://i.imgur.com/o4kFdKk.png)
+#### Check Dependencies
+![image](https://github.com/ceruulean/ESO-AddOn-Downloader/assets/41603229/e05adaef-df9e-491e-a078-2eee0d0a10fb)
+
 #### Downloading, extracting and installing the latest AddOn versions
 ![](https://i.imgur.com/zYlLtm9.png)
 
