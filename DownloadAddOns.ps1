@@ -8,6 +8,7 @@ $addonIDs = @(
 2218, # Bandit's Gear Manager
 1174, #Votan's Keybinder
 2273, #HideGroup
+3301, #ScreenshotMode
 
 1245, # Tamriel Trade Center
 3079, # ShowTTCPrice
@@ -16,7 +17,9 @@ $addonIDs = @(
 3317, #LibCharacterKnowledge
 695, #AwesomeGuildStore
 1346, #Dolgubons LazyWrit Crafter
+1232, #Crafted Potions (distinguish crafted potions)
 97, #Dustman to deal with your unwanted items!
+731, #Inventory Insight
 
 1253, # LibAddonKeybinds
 7, # LibAddonMenu
@@ -40,8 +43,10 @@ $addonIDs = @(
 56, #LibMediaProvider
 2204, #LibPrice
 2274, #LibPromises
+517, #LibResearch
 1151, # LibScroll
 2241, #LibSets
+2624, #LibTableFunctions-1.0
 1311, #LibTextFilter
 
 818, #LuiExtended
@@ -51,14 +56,20 @@ $addonIDs = @(
 1399, # Votan's Minimap
 1703, # Circular Votan's Mini Map
 1255, # Better Rally
+3182, # Better Scoreboard
 
+1863, #Urich's Skill Point Finder
 3639 # Crux Counter (Arcanist class)
 2892, # Pithka's Achievement Tracker
 3340, # Gear Overview
 3648, # SuperStar
+3887, # Script Tracker (Scribing)
 1319, # Improved Death Recap
-2918, # Perfect Weave
-2048, #Light Attack Helper
+# 2918, # Perfect Weave
+3893, # Double Cast Protection
+2048, # Light Attack Helper
+2373, # Combat Metronome GCD Tracker
+2657, # Weave Delays
 2063, # WeaponCharger
 
 3395, # Elm's Markers
@@ -69,15 +80,19 @@ $addonIDs = @(
 3439, # Combat Alerts Extended
 3137, # CrutchAlerts
 1355, # RaidNotifier Updated
+3657, # Sanitys Edge Helper
 1101, # Raidificator Trial Arena and Dungeon Timer
 2311, # Hodor Reflexes
-1360 # Combat Metrics
+1360, # Combat Metrics
+2088 # Lilith's Group Manager (LGM)
+
 )
 # 2987, # InstantSwap bugged with volendrung
 # 2322, # GCD Bar (don't need with LUI)
 # 288, #LoreBooks
 # 3501, #Simple Skyshards
 # eso toolbox: 176
+#2633 # AutoInvite-Updated
 
 $currentAddons = @()
 if ((Test-Path $previouslyDownloaded)) {
@@ -234,7 +249,7 @@ if($input -eq "1"){
 		}
 	}
 } elseif ($input -eq "3") {
-	[Reflection.Assembly]::LoadWithPartialName('System.IO.Compression.FileSystem')
+	[Reflection.Assembly]::LoadWithPartialName('System.IO.Compression.FileSystem') | out-null
 
     Write-Host "Checking if the download folder '$localDownloadFolder' exists..."
     if ((Test-Path $localDownloadFolder) -ne $True) {
@@ -277,7 +292,7 @@ if($input -eq "1"){
 			# $v | Add-Member -NotePropertyName Folder -NotePropertyValue $foldername
 
 		} else {		
-			Write-Host $v.Name"is on the latest version."
+			Write-Host "`t$($v.Name) is on the latest version." -ForegroundColor DarkGray
 		}
 			$addons += $v
     }
