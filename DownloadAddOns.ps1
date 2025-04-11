@@ -29,12 +29,17 @@ $addonIDs = @(
 3805, #LibChatMenuButton
 2528, #LibCombat
 1146, #LibCustomMenu
+3980, #LibDataEncode
 3297, # LibDataShare
 2277, #LibDateTime
 2275, #LibDebugLogger
 2276, #LibGetText
+1337, #LibGroupBroadcast
+4024, #LibGroupCombatStats
 601, #LibGPS
 584, #LibHarvensAddonsSettings
+2817, #LibHistoire - Guild History Library
+3585, #LibId64
 1594, #LibLazyCrafting
 2118, #LibMainMenu-2.0
 3353, #LibMapData
@@ -50,6 +55,8 @@ $addonIDs = @(
 1311, #LibTextFilter
 
 818, #LuiExtended
+#3052, #AlternativeBossBar
+#2889, #Next Boss Stage Custom Boss Frame
 93, # pChat
 185, # CustomCompassPins
 1881, #Map Pins
@@ -189,7 +196,7 @@ Write-Host -ForegroundColor Green @"
 Thank you for using the ESOUI download script.
 Make sure, you've added your desired AddOn IDs within this script in line 3.
 
-You have currently $($addonIDs.Count) AddOn selected.
+You have currently $($addonIDs.Count) AddOns selected.
 "@
 Write-Host @"
 ---MENU---
@@ -213,9 +220,10 @@ if($input -eq "1"){
 } elseif ($input -eq "2") {
 	$libs = @()
 	$embeddedlibs = @()
-	$folders = Get-ChildItem -Directory $esoAddonsFolder
+	$folders = (Get-ChildItem -Directory $esoAddonsFolder).Name
 	
 	Foreach ($name in $folders) {
+		Write-Host $name
 		$a = Get-AddonInfo $esoAddonsFolder $name
 		$libs += $a
 		$e = Get-EmbeddedLibs "$esoAddonsFolder\$name" $a.Dependencies
@@ -226,7 +234,6 @@ if($input -eq "1"){
 		if ($addon.Dependencies) {
 			Write-Host $addon.Name
 		}
-
 
 		Foreach ($dep in $addon.Dependencies) {
 
