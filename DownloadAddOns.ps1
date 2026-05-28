@@ -3,18 +3,27 @@ $localDownloadFolder = "$([Environment]::GetFolderPath("MyDocuments"))\Elder Scr
 $previouslyDownloaded = "$localDownloadFolder\downloadedaddons.csv"
 
 $addonIDs = @(
+#Addon Dev Tools
+2601, #MerTorchbug Variable inspector/Scripts/Events/and more
+970, #CirconiansTextureIt
+
 3418, # Synced Account Settings
 1536, # Action Duration Reminder
-2218, # Bandit's Gear Manager
+#2218,	Bandit's Gear Manager
 1174, #Votan's Keybinder
 2273, #HideGroup
-3301, #ScreenshotMode
-
+# For filming
+1048, #Immersive Horse Riding
+3204, # Emote Shortcuts (Fixed)
+1959, #EssentialHousingTools
+3628, #CustomisableImmersiveHUDHider
+4009, #FOX Ultimate Camera
+2802, #PlayedAll
 1245, # Tamriel Trade Center
 3079, # ShowTTCPrice
 
 1605, #WritWorthy
-3317, #LibCharacterKnowledge
+2938, #Character Knowledge
 695, #AwesomeGuildStore
 1346, #Dolgubons LazyWrit Crafter
 1232, #Crafted Potions (distinguish crafted potions)
@@ -25,6 +34,7 @@ $addonIDs = @(
 7, # LibAddonMenu
 3346, #LibAddonMenu - SoundSlider Widget
 2125, # LibAsync
+3317, #LibCharacterKnowledge
 2382, #LibChatMessages
 3805, #LibChatMenuButton
 2528, #LibCombat
@@ -40,6 +50,7 @@ $addonIDs = @(
 584, #LibHarvensAddonsSettings
 2817, #LibHistoire - Guild History Library
 3585, #LibId64
+3855, #LibItemLink
 1594, #LibLazyCrafting
 2118, #LibMainMenu-2.0
 3353, #LibMapData
@@ -48,13 +59,18 @@ $addonIDs = @(
 56, #LibMediaProvider
 2204, #LibPrice
 2274, #LibPromises
+4102, #LibQRCode
 517, #LibResearch
 1151, # LibScroll
+3546, #LibScrollableMenu
 2241, #LibSets
 2624, #LibTableFunctions-1.0
 1311, #LibTextFilter
+2171, #LibZone
 
 818, #LuiExtended
+4374, #LuiMedia
+4373, #LuiData
 #3052, #AlternativeBossBar
 #2889, #Next Boss Stage Custom Boss Frame
 93, # pChat
@@ -65,12 +81,12 @@ $addonIDs = @(
 1255, # Better Rally
 3182, # Better Scoreboard
 
+2143, #BeamMeUp
 1863, #Urich's Skill Point Finder
-3639 # Crux Counter (Arcanist class)
+4128, #CruxCounter Subclassing
 2892, # Pithka's Achievement Tracker
 3340, # Gear Overview
 3648, # SuperStar
-3887, # Script Tracker (Scribing)
 1319, # Improved Death Recap
 # 2918, # Perfect Weave
 3893, # Double Cast Protection
@@ -79,8 +95,10 @@ $addonIDs = @(
 2657, # Weave Delays
 2063, # WeaponCharger
 
-3395, # Elm's Markers
+# 3395, Elm's Markers
+4266, # MoreMarkers
 2834, # OdySupportIcons
+4127, #OsseinCageHelper
 
 655, # Srendarr Buff and Debuff Tracker
 1855, # Code's Combat Alerts 
@@ -91,8 +109,10 @@ $addonIDs = @(
 1101, # Raidificator Trial Arena and Dungeon Timer
 2311, # Hodor Reflexes
 1360, # Combat Metrics
-2088 # Lilith's Group Manager (LGM)
+2088, # Lilith's Group Manager (LGM)
+3170, # Wizards Wardrobe
 
+4444 #DKcorrosiveAlert
 )
 # 2987, # InstantSwap bugged with volendrung
 # 2322, # GCD Bar (don't need with LUI)
@@ -107,8 +127,8 @@ if ((Test-Path $previouslyDownloaded)) {
 }
 
 function Get-DownloadLink([int]$FileID) {
-    $d = "https://www.esoui.com/downloads/getfile.php?id=$FileID"
-    return $d
+	$d = "https://www.esoui.com/downloads/getfile.php?id=$FileID"
+	return $d
 }
 
 function Get-InstalledVersion([int]$FileID) {
@@ -129,28 +149,32 @@ function Get-EmbeddedLibs([string]$dir, [array]$dependencies) {
 }
 
 function Get-AddonInfo([string]$dir, [string]$name) {
-	if (Test-Path "$dir\$name\$name.txt") {
-		$c = Get-Content -Path "$dir\$name\$name.txt"
+	$infoFile = "$dir\$name\$name.txt"
+	switch (Test-Path $infoFile) {
+		(Test-Path "$dir\$name\$name.txt") { $infoFile = "$dir\$name\$name.txt"}
+		(Test-Path "$dir\$name\$name.addon") { $infoFile = "$dir\$name\$name.addon" }
+		default { throw "No addon manifest (.txt or .addon extension) found!" }
+	}
+	
+	$c = Get-Content -Path $infoFile
+	$av = $c | Select-String -Pattern '^## AddOnVersion:\s(\d+)$'
+	$addonVersion = ($av.Matches.Groups | Where {$_.Name -eq 1}).Value
+
+	$r = $c | Select-String -Pattern '^## DependsOn:\s(\S*(?:[^\S\r\n])?)*$'
+	$deps = ($r.Matches.Groups | Where {$_.Name -eq 1} | Select -ExpandProperty Captures | Where {$_.Length -gt 0}).Value
+
+	return [PSCustomObject]@{
+		Name = $name
+		AddonVersion = [int]$addonVersion
 		
-		$av = $c | Select-String -Pattern '^## AddOnVersion:\s(\d+)$'
-		$addonVersion = ($av.Matches.Groups | Where {$_.Name -eq 1}).Value
-
-		$r = $c | Select-String -Pattern '^## DependsOn:\s(\S*(?:[^\S\r\n])?)*$'
-		$deps = ($r.Matches.Groups | Where {$_.Name -eq 1} | Select -ExpandProperty Captures | Where {$_.Length -gt 0}).Value
-
-		return [PSCustomObject]@{
-			Name = $name
-			AddonVersion = [int]$addonVersion
-			
-			Dependencies = if ($deps) {
-				@($deps | %{
-				$hm = [regex]::split($_, '[ \>\<\=]+')
-					[PSCustomObject]@{
-						Name = $hm[0]
-						MinVersion = [int]$hm[1]
-					}
-				})
-			}
+		Dependencies = if ($deps) {
+			@($deps | %{
+			$hm = [regex]::split($_, '[ \>\<\=]+')
+				[PSCustomObject]@{
+					Name = $hm[0]
+					MinVersion = [int]$hm[1]
+				}
+			})
 		}
 	}
 
@@ -161,35 +185,35 @@ function Get-AddonInfo([string]$dir, [string]$name) {
 }
 
 function Retreive-AddOnVersion([int]$FileID) {
-    $d = "https://www.esoui.com/downloads/info$FileID"
-    $html = Invoke-WebRequest -Uri ($d) -UseBasicParsing
+	$d = "https://www.esoui.com/downloads/info$FileID"
+	$html = Invoke-WebRequest -Uri ($d) -UseBasicParsing
 
-    if ($html.Content -match "Sorry, this is not a valid link any more.") {
-        $obj = [PSCustomObject]@{
-            ID = $FileID
-            Name = "N/A"
-            Version = [version]"0.0"
-            LastUpdate = "Addon does not exist."
-        }
-        return $obj
-    }
+	if ($html.Content -match "Sorry, this is not a valid link any more.") {
+		$obj = [PSCustomObject]@{
+			ID = $FileID
+			Name = "N/A"
+			Version = [version]"0.0"
+			LastUpdate = "Addon does not exist."
+		}
+		return $obj
+	}
 
-    $html.Content -match '<div id="version">Version: (.+)</div>' | Out-Null
-    $version = $matches[1]
+	$html.Content -match '<div id="version">Version: (.+)</div>' | Out-Null
+	$version = $matches[1]
 
-    $html.Content -match '<title>(.+)</title>' | Out-Null
-    $name = ($matches[1].Split(":")[0]).Trim()
+	$html.Content -match '<title>(.+)</title>' | Out-Null
+	$name = ($matches[1].Split(":")[0]).Trim()
 
-    $html.Content -match '<div id="safe">(.+)</div>' | Out-Null
-    $updated = $matches[1] -replace "Updated: ", ""
+	$html.Content -match '<div id="safe">(.+)</div>' | Out-Null
+	$updated = $matches[1] -replace "Updated: ", ""
 
-    $obj = [PSCustomObject]@{
-        ID = $FileID
-        Name = $name
-        Version = [string]$version
-        LastUpdate = $updated
-    }
-    return $obj
+	$obj = [PSCustomObject]@{
+		ID = $FileID
+		Name = $name
+		Version = [string]$version
+		LastUpdate = $updated
+	}
+	return $obj
 }
 
 Write-Host -ForegroundColor Green @"
@@ -207,16 +231,16 @@ Write-Host @"
 $input = Read-Host ">"
 
 if($input -eq "1"){
-    Write-Host "Parsing ESOUI.com - Please wait..." -ForegroundColor Yellow
-    $addons = @()
-    ForEach ($id in $addonIDs) {
+	Write-Host "Parsing ESOUI.com - Please wait..." -ForegroundColor Yellow
+	$addons = @()
+	ForEach ($id in $addonIDs) {
 		$installedVersion = Get-InstalledVersion($id)
-        $v = Retreive-AddOnVersion -FileID $id
+		$v = Retreive-AddOnVersion -FileID $id
 		$v | Add-Member -NotePropertyName InstalledVersion -NotePropertyValue $installedVersion
-        $addons += $v
-    }
-    $addons | Sort -Property Name | Format-Table
-    Read-Host "Press any key to exit..."
+		$addons += $v
+	}
+	$addons | Sort -Property Name | Format-Table
+	Read-Host "Press any key to exit..."
 } elseif ($input -eq "2") {
 	$libs = @()
 	$embeddedlibs = @()
@@ -246,7 +270,7 @@ if($input -eq "1"){
 					Write-Host " |-- $($dep.Name)" -ForegroundColor Green
 				}
 
-			} elseif ($embedded) {  
+			} elseif ($embedded) {	
 				Write-Host " |-- (embedded) $($dep.Name)" -ForegroundColor DarkGray
 			}
 			else {
@@ -258,21 +282,21 @@ if($input -eq "1"){
 } elseif ($input -eq "3") {
 	[Reflection.Assembly]::LoadWithPartialName('System.IO.Compression.FileSystem') | out-null
 
-    Write-Host "Checking if the download folder '$localDownloadFolder' exists..."
-    if ((Test-Path $localDownloadFolder) -ne $True) {
-        Write-Host "Creating the download folder '$localDownloadFolder'..."
-        New-Item -ItemType Directory -Force -Path $localDownloadFolder
-    }
+	Write-Host "Checking if the download folder '$localDownloadFolder' exists..."
+	if ((Test-Path $localDownloadFolder) -ne $True) {
+		Write-Host "Creating the download folder '$localDownloadFolder'..."
+		New-Item -ItemType Directory -Force -Path $localDownloadFolder
+	}
 
-    Write-Host "Searching and deleting old ZIP files in the download folder..."
-    Get-ChildItem -Path $localDownloadFolder -Filter *.zip | ForEach-Object {
-    Remove-Item $_.FullName -Force
-    }
+	Write-Host "Searching and deleting old ZIP files in the download folder..."
+	Get-ChildItem -Path $localDownloadFolder -Filter *.zip | ForEach-Object {
+	Remove-Item $_.FullName -Force
+	}
 
-    Write-Host "Downloading the files..."
+	Write-Host "Downloading the files..."
 	$addons = @()
 	
-    foreach ($id in $addonIDs) {
+	foreach ($id in $addonIDs) {
 		$v = Retreive-AddOnVersion -FileID $id
 		$installedVersion = Get-InstalledVersion($id)
 		
@@ -302,16 +326,16 @@ if($input -eq "1"){
 			Write-Host "`t$($v.Name) is on the latest version." -ForegroundColor DarkGray
 		}
 			$addons += $v
-    }
+	}
 
-    Write-host
-    Write-Host "Extracting ZIP files to $esoAddonsFolder..."
-    Get-ChildItem -Path $localDownloadFolder -Filter *.zip | ForEach-Object {
-        Write-Host "`t$($_.Name) extracted."
-        Expand-Archive $_.FullName -DestinationPath $esoAddonsFolder -Force
-    }
+	Write-host
+	Write-Host "Extracting ZIP files to $esoAddonsFolder..."
+	Get-ChildItem -Path $localDownloadFolder -Filter *.zip | ForEach-Object {
+		Write-Host "`t$($_.Name) extracted."
+		Expand-Archive $_.FullName -DestinationPath $esoAddonsFolder -Force
+	}
 	
 	$addons | Export-Csv -Path $previouslyDownloaded
 } else {
-    Write-Host "Invalid input. Exiting." -ForegroundColor Red
+	Write-Host "Invalid input. Exiting." -ForegroundColor Red
 }
